@@ -11,9 +11,12 @@ namespace PolyDeploy.DeployClient
     {
         private readonly HttpClient httpClient;
 
-        public Installer(HttpClient httpClient)
+        private readonly IStopwatch stopwatch;
+
+        public Installer(HttpClient httpClient, IStopwatch stopwatch)
         {
             this.httpClient = httpClient;
+            this.stopwatch = stopwatch;
         }
 
         public async Task<Session> GetSessionAsync(DeployInput options, string sessionId)

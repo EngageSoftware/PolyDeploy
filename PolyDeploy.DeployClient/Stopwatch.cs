@@ -5,19 +5,14 @@ namespace PolyDeploy.DeployClient
 
     public class Stopwatch : IStopwatch
     {
-        public Stopwatch()
+        public void StartNew()
         {
-            this.stopwatch = new System.Diagnostics.Stopwatch();
+            this.stopwatch = System.Diagnostics.Stopwatch.StartNew();
         }
 
-        public void Start()
-        {
-            this.stopwatch.Start();
-        }
+        public TimeSpan Elapsed { get { return this.stopwatch?.Elapsed ?? TimeSpan.Zero; } }
 
-        public TimeSpan Elapsed { get { return this.stopwatch.Elapsed; } }
-
-        private System.Diagnostics.Stopwatch stopwatch;
+        private System.Diagnostics.Stopwatch? stopwatch;
 
     }
 }

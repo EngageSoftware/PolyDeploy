@@ -5,7 +5,7 @@ namespace PolyDeploy.DeployClient
 
     public interface IStopwatch
     {
-        void Start();
+        void StartNew();
 
         TimeSpan Elapsed { get; }
 
