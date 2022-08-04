@@ -164,6 +164,14 @@ namespace PolyDeploy.DeployClient.Tests
             sessionResponse.Success.ShouldBeFalse();
             sessionResponse.CanInstall.ShouldBeTrue();
         }
+        
+        [Fact]
+        public async Task GetSessionAsync_TimeoutResponse_Exception()
+        {
+            var sessionId = Guid.NewGuid().ToString().Replace("-", string.Empty);
+            var targetUri = new Uri("https://polydeploy.example.com/");
+            var options = TestHelpers.CreateDeployInput(targetUri.ToString(), installationStatusTimeout: 5);
+        }
 
         private class FakeMessageHandler : HttpMessageHandler
         {
