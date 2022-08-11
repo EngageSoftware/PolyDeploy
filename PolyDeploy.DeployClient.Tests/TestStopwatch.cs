@@ -5,6 +5,11 @@ using Shouldly;
 namespace PolyDeploy.DeployClient.Tests;
 public class TestStopwatch : IStopwatch
 {
+    public TestStopwatch(params TimeSpan[] timeSpans)
+    {
+        this.TimeSpans = timeSpans;
+    }
+
     public TimeSpan Elapsed
     {
         get
@@ -13,7 +18,7 @@ public class TestStopwatch : IStopwatch
             return TimeSpans[0];
         }
     }
-    public List<TimeSpan> TimeSpans { get; } = new List<TimeSpan>();
+    public IReadOnlyList<TimeSpan> TimeSpans { get; }
 
     public bool IsStartNewCalled { get; private set; }
 
