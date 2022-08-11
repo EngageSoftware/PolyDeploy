@@ -1,7 +1,6 @@
 namespace PolyDeploy.DeployClient.Tests
 {
     using System;
-    using System.Collections.Generic;
     using System.IO;
     using System.Net;
     using System.Net.Http;
@@ -24,10 +23,8 @@ namespace PolyDeploy.DeployClient.Tests
 
             var handler = new FakeMessageHandler(
                 new Uri(targetUri, "/DesktopModules/PolyDeploy/API/Remote/CreateSession"),
-                new HttpResponseMessage(System.Net.HttpStatusCode.OK) { Content = new StringContent(JsonSerializer.Serialize(new { Guid = expectedSessionId })), });
-            var client = new HttpClient(handler);
-
-            var installer = new Installer(client);
+                new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(JsonSerializer.Serialize(new { Guid = expectedSessionId })), });
+            var installer = CreateInstaller(handler);
 
             var sessionId = await installer.StartSessionAsync(options);
 
@@ -45,10 +42,9 @@ namespace PolyDeploy.DeployClient.Tests
 
             var handler = new FakeMessageHandler(
                 new Uri(targetUri, "/DesktopModules/PolyDeploy/API/Remote/CreateSession"),
-                new HttpResponseMessage(System.Net.HttpStatusCode.NotFound));
-            var client = new HttpClient(handler);
+                new HttpResponseMessage(HttpStatusCode.NotFound));
 
-            var installer = new Installer(client);
+            var installer = CreateInstaller(handler);
 
             await Should.ThrowAsync<HttpRequestException>(() => installer.StartSessionAsync(options));
         }
@@ -63,9 +59,7 @@ namespace PolyDeploy.DeployClient.Tests
             var handler = new FakeMessageHandler(
                 new Uri(targetUri, $"/DesktopModules/PolyDeploy/API/Remote/AddPackages?sessionGuid={sessionId}"),
                 null);
-            var client = new HttpClient(handler);
-
-            var installer = new Installer(client);
+            var installer = CreateInstaller(handler);
 
             await installer.UploadPackageAsync(options, sessionId, new MemoryStream(Encoding.UTF8.GetBytes("XYZ")), "Jamestown_install_5.5.7.zip");
 
@@ -87,9 +81,7 @@ namespace PolyDeploy.DeployClient.Tests
             var handler = new FakeMessageHandler(
                 new Uri(targetUri, $"/DesktopModules/PolyDeploy/API/Remote/Install?sessionGuid={sessionId}"),
                 null);
-            var client = new HttpClient(handler);
-
-            var installer = new Installer(client);
+            var installer = CreateInstaller(handler);
 
             await installer.InstallPackagesAsync(options, sessionId);
 
@@ -133,10 +125,9 @@ namespace PolyDeploy.DeployClient.Tests
 
             var handler = new FakeMessageHandler(
                 new Uri(targetUri, $"/DesktopModules/PolyDeploy/API/Remote/GetSession?sessionGuid={sessionId}"),
-                new HttpResponseMessage(System.Net.HttpStatusCode.OK) { Content = new StringContent(response), });
-            var client = new HttpClient(handler);
+                new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(response), });
 
-            var installer = new Installer(client);
+            var installer = CreateInstaller(handler);
 
             var session = await installer.GetSessionAsync(options, sessionId);
 
@@ -171,6 +162,22 @@ namespace PolyDeploy.DeployClient.Tests
             var sessionId = Guid.NewGuid().ToString().Replace("-", string.Empty);
             var targetUri = new Uri("https://polydeploy.example.com/");
             var options = TestHelpers.CreateDeployInput(targetUri.ToString(), installationStatusTimeout: 5);
+            var stopwatch = new TestStopwatch();
+
+            var handler = new FakeMessageHandler(
+                new Uri(targetUri, $"/DesktopModules/PolyDeploy/API/Remote/GetSession?sessionGuid={sessionId}"),
+                new HttpResponseMessage(HttpStatusCode.NotFound));
+            var installer = CreateInstaller(handler, stopwatch);
+            
+            await Should.ThrowAsync<HttpRequestException>(() => installer.GetSessionAsync(options, sessionId));
+        }
+
+        private static Installer CreateInstaller(HttpMessageHandler? messageHandler = null, IStopwatch? stopwatch = null)
+        {
+            messageHandler ??= new FakeMessageHandler(A.Dummy<Uri>(), null);
+            return new Installer(
+                new HttpClient(messageHandler),
+                stopwatch ?? new TestStopwatch());
         }
 
         private class FakeMessageHandler : HttpMessageHandler
