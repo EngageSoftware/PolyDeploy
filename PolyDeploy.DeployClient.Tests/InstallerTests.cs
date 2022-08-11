@@ -1,6 +1,7 @@
 namespace PolyDeploy.DeployClient.Tests
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Net;
     using System.Net.Http;
@@ -155,7 +156,7 @@ namespace PolyDeploy.DeployClient.Tests
             sessionResponse.Success.ShouldBeFalse();
             sessionResponse.CanInstall.ShouldBeTrue();
         }
-        
+
         [Fact]
         public async Task GetSessionAsync_TimeoutResponse_Exception()
         {
@@ -168,7 +169,7 @@ namespace PolyDeploy.DeployClient.Tests
                 new Uri(targetUri, $"/DesktopModules/PolyDeploy/API/Remote/GetSession?sessionGuid={sessionId}"),
                 new HttpResponseMessage(HttpStatusCode.NotFound));
             var installer = CreateInstaller(handler, stopwatch);
-            
+
             await Should.ThrowAsync<HttpRequestException>(() => installer.GetSessionAsync(options, sessionId));
         }
 
@@ -192,9 +193,12 @@ namespace PolyDeploy.DeployClient.Tests
             public HttpRequestMessage? Request { get; set; }
             public HttpResponseMessage? Response { get; set; }
 
+            public List<HttpRequestMessage> Requests { get; } = new List<HttpRequestMessage>();
+
             protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {
                 this.Request = request;
+                this.Requests.Add(request);
                 request.RequestUri.ShouldBe(this.Uri);
 
                 return Task.FromResult(this.Response ?? new HttpResponseMessage(HttpStatusCode.NoContent));
