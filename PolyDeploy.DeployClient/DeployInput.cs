@@ -41,6 +41,10 @@ namespace PolyDeploy.DeployClient
             set => this.packagesDirectoryPath = ValidOrCurrentDirectory(value);
         }
 
+        [CommandOption("-r|--recurse")]
+        [Description("Whether to search in subdirectories of the Packages Directory.")]
+        public bool Recurse { get; set; } = false;
+
         [CommandOption("-l|--log-level")]
         [Description("Defines the amount of logging.")]
         [DefaultValue(LogLevel.Information)]
